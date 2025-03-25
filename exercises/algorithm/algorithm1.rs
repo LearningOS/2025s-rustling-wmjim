@@ -2,7 +2,6 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
@@ -29,13 +28,13 @@ struct LinkedList<T> {
     end: Option<NonNull<Node<T>>>,
 }
 
-impl<T> Default for LinkedList<T> {
+impl<T: PartialOrd> Default for LinkedList<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T> LinkedList<T> {
+impl<T: PartialOrd> LinkedList<T> {
     pub fn new() -> Self {
         Self {
             length: 0,
@@ -71,12 +70,37 @@ impl<T> LinkedList<T> {
     }
 	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
 	{
-		//TODO
-		Self {
-            length: 0,
-            start: None,
-            end: None,
+        let mut list_merged = LinkedList::<T>::new();
+
+        let mut current_a = list_a.start;
+        let mut current_b: Option<NonNull<Node<T>>> = list_b.start;
+        while let (Some(ptr_a), Some(ptr_b)) = (current_a, current_b) {
+            let node_a = unsafe { Box::from_raw(ptr_a.as_ptr()) };
+            let node_b = unsafe { Box::from_raw(ptr_b.as_ptr()) };
+            if node_a.val <= node_b.val {
+                list_merged.add(node_a.val);
+                current_a = node_a.next;
+                current_b = Some(unsafe { NonNull::new_unchecked(Box::into_raw(node_b)) });
+            } else {
+                list_merged.add(node_b.val);
+                current_b = node_b.next;
+                current_a = Some(unsafe { NonNull::new_unchecked(Box::into_raw(node_a)) });
+            }
         }
+
+        while let Some(ptr_a) = current_a {
+            let node_a = unsafe { Box::from_raw(ptr_a.as_ptr()) };
+            list_merged.add(node_a.val);
+            current_a = node_a.next;
+        }
+
+        while let Some(ptr_b) = current_b {
+            let node_b = unsafe { Box::from_raw(ptr_b.as_ptr()) };
+            list_merged.add(node_b.val);
+            current_b = node_b.next;
+        }
+
+        list_merged
 	}
 }
 
